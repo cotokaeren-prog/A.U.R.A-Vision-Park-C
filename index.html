@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mô hình bãi đỗ xe thông minh | Bách Khoa TP.HCM</title>
+<meta name="description" content="Sản phẩm kỹ thuật của sinh viên: Mô hình bãi đỗ xe thông minh.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+
+<style>
+:root{
+  --bg:#04060b;
+  --bg-2:#080d17;
+  --panel:#0b1220;
+  --panel-2:#0f1a2e;
+  --blue:#1f6fe0;
+  --blue-2:#4aa3ff;
+  --blue-3:#9fd0ff;
+  --text:#e8eefc;
+  --muted:#8a99b5;
+  --line:rgba(74,163,255,.16);
+  --radius:16px;
+  --mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
+  --sans:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--sans);background:var(--bg);color:var(--text);
+  line-height:1.65;min-height:100vh;overflow-x:hidden;
+}
+#rain{position:fixed;inset:0;z-index:0;pointer-events:none}
+body::before{ /* quầng sáng xanh nền */
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(900px 500px at 15% -10%,rgba(31,111,224,.22),transparent 60%),
+    radial-gradient(700px 500px at 100% 30%,rgba(74,163,255,.10),transparent 60%);
+}
+a{color:var(--blue-2);text-decoration:none}
+
+/* ---------- HEADER / NAV ---------- */
+header{
+  position:sticky;top:0;z-index:50;
+  background:rgba(4,6,11,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line);
+}
+.header-in{max-width:1200px;margin:auto;padding:12px 24px;display:flex;align-items:center;gap:24px}
+.brand{display:flex;align-items:center;gap:12px;flex-shrink:0;cursor:pointer}
+.logo-group{display:flex;align-items:center;gap:8px}
+
+/* Căn giữa tuyệt đối và phóng to logo vừa khung */
+.brand .logo{
+  width:50px;
+  height:50px;
+  border-radius:10px;
+  background:var(--panel-2);
+  border:1px solid var(--line);
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:2px;
+}
+.brand .logo img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  display:block;
+}
+.brand .logo span{font-family:var(--mono);font-size:11px;color:var(--blue-2)}
+.brand small{display:block;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.brand b{font-size:14px;font-weight:700;letter-spacing:.02em}
+nav{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;margin-left:auto}
+nav::-webkit-scrollbar{display:none}
+nav button{
+  background:none;border:0;color:var(--muted);font:500 13.5px var(--sans);
+  padding:9px 14px;border-radius:999px;cursor:pointer;white-space:nowrap;transition:.2s;
+}
+nav button:hover{color:var(--text);background:rgba(74,163,255,.08)}
+nav button.active{color:#fff;background:linear-gradient(135deg,var(--blue),#1553b3);box-shadow:0 4px 18px rgba(31,111,224,.35)}
+
+/* ---------- LAYOUT ---------- */
+main{position:relative;z-index:1;max-width:1200px;margin:auto;padding:48px 24px 80px}
+.tab{display:none;animation:fade .55s ease}
+.tab.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.eyebrow{font:600 12px var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--blue-2);margin-bottom:12px}
+h1{font-size:clamp(34px,6vw,64px);line-height:1.08;font-weight:800;letter-spacing:-.02em}
+h2.title{font-size:clamp(26px,4vw,38px);font-weight:800;letter-spacing:-.01em;margin-bottom:10px}
+.lead{color:var(--muted);font-size:17px;max-width:720px}
+.grad{background:linear-gradient(90deg,var(--blue-2),#7cc0ff 50%,var(--blue));-webkit-background-clip:text;background-clip:text;color:transparent}
+.section-head{margin-bottom:36px}
+.card{background:linear-gradient(180deg,var(--panel),var(--bg-2));border:1px solid var(--line);border-radius:var(--radius);padding:24px;transition:.25s}
+.card:hover{border-color:rgba(74,163,255,.4);transform:translateY(-3px)}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:999px;font:600 14px var(--sans);border:1px solid var(--line);color:var(--text);background:transparent;cursor:pointer;transition:.2s}
+.btn.primary{background:linear-gradient(135deg,var(--blue),#1553b3);border-color:transparent;box-shadow:0 8px 24px rgba(31,111,224,.35)}
+.btn:hover{transform:translateY(-2px);border-color:var(--blue-2)}
+
+/* ---------- HOME ---------- */
+.hero{padding:40px 0 20px;display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:center}
+.hero .lead{margin:22px 0 32px}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap}
+.hero-visual{
+  aspect-ratio:1/1;border-radius:24px;border:1px solid var(--line);
+  background:radial-gradient(circle at 50% 40%,rgba(31,111,224,.25),transparent 65%),var(--panel);
+  display:grid;place-items:center;overflow:hidden;position:relative
+}
+.hero-visual .ph{position:absolute;inset:0;border:0;border-radius:0}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:56px 0}
+.stat{text-align:center;padding:22px 12px}
+.stat b{display:block;font:700 34px var(--mono);color:var(--blue-2)}
+.stat span{font-size:13px;color:var(--muted)}
+.features{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.features .card .ico{width:44px;height:44px;border-radius:12px;background:rgba(31,111,224,.15);border:1px solid var(--line);display:grid;place-items:center;margin-bottom:16px;font-size:20px}
+.features h3{font-size:17px;margin-bottom:6px}
+.features p{font-size:14.5px;color:var(--muted)}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:56px}
+.about-grid h3{margin-bottom:10px;font-size:19px}
+.about-grid p,.about-grid li{color:var(--muted);font-size:15px}
+.about-grid ul{padding-left:18px}
+
+/* ---------- PLACEHOLDER ẢNH ---------- */
+.ph{position:relative;border-radius:14px;overflow:hidden;background:var(--panel-2);border:1px dashed rgba(74,163,255,.3);aspect-ratio:4/3}
+.ph img{width:100%;height:100%;object-fit:cover;display:block;cursor:zoom-in;transition:transform .5s}
+.ph:hover img{transform:scale(1.04)}
+.ph.static-img img{cursor:default;transition:none}
+.ph.static-img:hover img{transform:none}
+.ph::after{
+  content:attr(data-label);position:absolute;inset:0;display:grid;place-items:center;text-align:center;
+  padding:14px;font:500 12.5px var(--mono);color:var(--muted);z-index:0;
+}
+.ph img{position:relative;z-index:1}
+.ph.loaded{border-style:solid}
+.ph.loaded::after{display:none}
+.ph.missing img{display:none}
+.ph.square{aspect-ratio:1/1}
+.ph.wide{aspect-ratio:16/9}
+
+/* ---------- TIMELINE ---------- */
+.timeline{position:relative;max-width:860px;margin:auto;padding-left:32px}
+.timeline::before{content:"";position:absolute;left:8px;top:6px;bottom:6px;width:2px;background:linear-gradient(var(--blue-2),rgba(74,163,255,.05))}
+.t-item{position:relative;margin-bottom:26px}
+.t-item::before{content:"";position:absolute;left:-31px;top:24px;width:14px;height:14px;border-radius:50%;background:var(--bg);border:3px solid var(--blue-2);box-shadow:0 0 0 5px rgba(74,163,255,.12)}
+.t-date{font:600 12px var(--mono);color:var(--blue-2);letter-spacing:.1em;margin-bottom:6px}
+.t-item h3{font-size:18px;margin-bottom:6px}
+.t-item p{color:var(--muted);font-size:14.8px}
+.tag{display:inline-block;margin:10px 6px 0 0;padding:3px 10px;border-radius:999px;font:500 11.5px var(--mono);color:var(--blue-3);background:rgba(31,111,224,.14);border:1px solid var(--line)}
+
+/* ---------- MEDIA ---------- */
+.subtabs{display:flex;gap:8px;margin-bottom:26px;flex-wrap:wrap}
+.subtabs button{padding:9px 18px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--muted);font:500 13.5px var(--sans);cursor:pointer;transition:.2s}
+.subtabs button.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.subpane{display:none}.subpane.active{display:block;animation:fade .45s}
+.gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.fig figcaption{font-size:13.5px;color:var(--muted);margin-top:10px}
+.video-box{max-width:900px;margin:0 auto 22px}
+.video-box video,.video-box iframe{width:100%;aspect-ratio:16/9;border-radius:16px;border:1px solid var(--line);background:#000;display:block}
+.video-note{text-align:center;color:var(--muted);font-size:14px}
+
+/* ---------- SPECS ---------- */
+.spec-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:34px}
+.spec-cards .card{padding:20px}
+.spec-cards small{font:500 11px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.12em}
+.spec-cards b{display:block;font:700 22px var(--mono);color:var(--blue-2);margin-top:4px}
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel)}
+table{width:100%;border-collapse:collapse;min-width:720px}
+th,td{padding:15px 18px;text-align:left;font-size:14.5px;border-bottom:1px solid var(--line)}
+th{font:600 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--blue-2);background:var(--panel-2)}
+tr:last-child td{border-bottom:0}
+tbody tr:hover{background:rgba(74,163,255,.05)}
+td:first-child{color:var(--muted);font-family:var(--mono);width:56px}
+td b{font-weight:600}
+td span{color:var(--muted)}
+.sub-title{margin:44px 0 18px;font-size:20px}
+.diagram{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;align-items:center;text-align:center}
+.diagram div{padding:16px 8px;border:1px solid var(--line);border-radius:12px;background:var(--panel);font-size:13.5px}
+.diagram div.core{background:linear-gradient(135deg,var(--blue),#1553b3);border-color:transparent;font-weight:700}
+
+/* ---------- PROCESS ---------- */
+.process-grid{columns:3;column-gap:18px}
+.process-grid .fig{break-inside:avoid;margin-bottom:18px}
+.process-grid .ph{aspect-ratio:auto;min-height:200px}
+.process-grid .ph img{height:auto}
+
+/* ---------- TEAM ---------- */
+.org{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:44px}
+.org .card{display:flex;gap:18px;align-items:center}
+.org .ph{width:92px;flex-shrink:0;border-radius:50%;aspect-ratio:1/1}
+.org h3{font-size:17px}
+.org p{color:var(--muted);font-size:14px}
+.team-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.member{text-align:center}
+.member .ph{width:128px;margin:0 auto 16px;border-radius:50%;aspect-ratio:1/1}
+.member h3{font-size:17px}
+.member .role{font:500 12px var(--mono);color:var(--blue-2);margin:2px 0 10px;display:block}
+.member p{color:var(--muted);font-size:14px}
+.member .id{font:400 12px var(--mono);color:var(--muted)}
+
+/* ---------- LIGHTBOX ---------- */
+#lightbox{position:fixed;inset:0;z-index:200;background:rgba(2,4,8,.94);display:none;place-items:center;padding:30px;cursor:zoom-out}
+#lightbox.on{display:grid}
+#lightbox img{max-width:100%;max-height:100%;border-radius:12px}
+
+footer{position:relative;z-index:1;border-top:1px solid var(--line);padding:28px 24px;text-align:center;color:var(--muted);font-size:13px}
+footer b{color:var(--text)}
+
+/* ---------- RESPONSIVE ---------- */
+@media(max-width:980px){
+  .hero{grid-template-columns:1fr}
+  .hero-visual{max-width:420px}
+  .features,.gallery,.team-grid{grid-template-columns:repeat(2,1fr)}
+  .spec-cards{grid-template-columns:repeat(2,1fr)}
+  .process-grid{columns:2}
+}
+@media(max-width:640px){
+  .header-in{flex-direction:column;align-items:stretch;gap:10px;padding:10px 14px}
+  .brand{justify-content:center}
+  nav{margin:0}
+  main{padding:32px 16px 60px}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .features,.gallery,.team-grid,.about-grid,.org{grid-template-columns:1fr}
+  .process-grid{columns:1}
+  .diagram{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<canvas id="rain"></canvas>
+
+<header>
+  <div class="header-in">
+    <div class="brand" data-go="home">
+      <div class="logo-group">
+        <div class="logo">
+          <img src="image/LogoVNU.png" alt="Logo BK" onerror="this.remove()">
+          <span></span>
+        </div>
+        <div class="logo">
+          <img src="image/LogoBKU.png" alt="Logo 2" onerror="this.remove()">
+          <span></span>
+        </div>
+        <div class="logo">
+          <img src="image/LogoKHUD.png" alt="Logo 2" onerror="this.remove()">
+          <span></span>
+        </div>
+      </div>
+      <div>
+        <small>Trường Đại Học Bách Khoa – ĐHQG.HCM</small>
+        <b>KHOA KHOA HỌC ỨNG DỤNG</b>
+      </div>
+    </div>
+    <nav id="nav">
+      <button data-tab="home" class="active">Trang chủ</button>
+      <button data-tab="timeline">Timeline</button>
+      <button data-tab="media">Hình ảnh &amp; Video</button>
+      <button data-tab="specs">Cấu kiện &amp; Thông số</button>
+      <button data-tab="process">Quá trình làm việc</button>
+      <button data-tab="team">Thành viên</button>
+    </nav>
+  </div>  
+</header>
+
+<main>
+
+<!-- =================== TRANG CHỦ =================== -->
+<section class="tab active" id="home">
+  <div class="hero">
+    <div>
+      <div class="eyebrow">NHÓM Đ.C - 5 KĨ SƯ - 2 NGÀNH HỌC - 1 SẢN PHẨM</div>
+      <h1>A.U.R.A <span class="grad">Vision Park</span></h1>
+      <p class="lead">
+        ​A.U.R.A  VisionPark viết tắt là Automated Utility & Recognition Algorithm VisionPark, là một hệ thống phân loại xe và nhận diện biển số bằng AI (Khoa Học Dữ Liệu). Được tích hợp mâm xoay, barie tự động (Cơ Kĩ Thuật). A.U.R.A được nhóm ĐC chúng tôi phát triển bởi 5 kĩ sư, với sứ mệnh và mục tiêu đoạt giải I, II, III Engineering Day.
+      </p>
+      <div class="hero-actions">
+        <button class="btn primary" data-go="media">Xem sản phẩm →</button>
+        <button class="btn" data-go="specs">Thông số kỹ thuật</button>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="ph square" data-label="Ảnh sản phẩm chính&#10;images/hero.jpg">
+        <img src="images/hero.jpg" alt="Mô hình bãi đỗ xe thông minh">
+      </div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="card stat"><b>4</b><span>Vị trí đỗ xe</span></div>
+    <div class="card stat"><b>6</b><span>Barie tự động</span></div>
+    <div class="card stat"><b>1</b><span>Mâm xoay cơ</span></div>
+    <div class="card stat"><b>2</b><span>AI phân loại</span></div>
+  </div>
+
+  <div class="section-head">
+    <div class="eyebrow">Tính năng nổi bật</div>
+    <h2 class="title">Hệ thống hoạt động như thế nào?</h2>
+  </div>
+  <div class="features">
+    <div class="card"><div class="ico">📡</div><h3>Cảm biến thông minh</h3><p>Mỗi ô đỗ được gắn cảm biến phát hiện xe, cập nhật trạng thái trống/đã đỗ ngay lập tức.</p></div>
+    <div class="card"><div class="ico">🚧</div><h3>Barie tự động</h3><p>Barie mở khi có xe ở cổng và còn chỗ trống, tự đóng sau khi xe đi qua.</p></div>
+    <div class="card"><div class="ico">📟</div><h3>Hiển thị chỗ trống</h3><p>Màn hình LCD tại cổng báo số chỗ còn trống; đèn LED xanh/đỏ cho từng vị trí.</p></div>
+  </div>
+
+  <div class="about-grid">
+    <div class="card">
+      <h3>Mục tiêu đề tài</h3>
+      <ul>
+        <li>Giải quyết bài toán đỗ xe thủ công.</li>
+        <li>Rèn luyện khả năng làm việc nhóm đúng với tinh thần môn học.</li>
+        <li>Liên kết 2 ngành, xác định thế mạnh cá nhân.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Phạm vi sản phẩm</h3>
+      <p>Mô hình nằm trong phạm vi có thể tự nghiên cứu và phát triển, mặc dù có ứng dụng AI nhưng phần lớn thiết kế, ý tưởng và thuật toán được nhóm chúng em tự lên ý tưởng và phát triển theo thời gian .</p>
+    </div>
+  </div>
+</section>
+
+<!-- =================== TIMELINE =================== -->
+<section class="tab" id="timeline">
+  <div class="section-head">
+    <div class="eyebrow">TimeLine</div>
+    <h2 class="title">Hành trình thực hiện</h2>
+    <p class="lead">Các mốc chính của nhóm từ lúc lên ý tưởng đến khi hoàn thiện sản phẩm.</p>
+  </div>
+  <div class="timeline">
+    <div class="t-item card">
+      <div class="t-date">TUẦN 1–2 · 09/2026</div>
+      <h3>Hình thành ý tưởng &amp; khảo sát</h3>
+      <p>Họp nhóm, khảo sát các ý tưởng từng thành viên và chốt ý tưởng.</p>
+      <span class="tag">Vui Vẻ</span><span class="tag">Hòa Đồng</span>
+    </div>
+    <div class="t-item card">
+      <div class="t-date">TUẦN 3–4 · 09/2026</div>
+      <h3>Hoạt động tại lớp</h3>
+      <p>Lắng nghe các đàn anh về định hướng, đồng thời tiếp tục bàn bạc về mô hình.</p>
+      <span class="tag">Cũng Vui</span><span class="tag">Còn Năng Nổ</span>
+    </div>
+    <div class="t-item card">
+      <div class="t-date">TUẦN 5–6 · 10/2026</div>
+      <h3>Code phần mềm, Training AI</h3>
+      <p>Thử các mô hình AI nhận diện xe, biển số.</p>
+      <span class="tag">Khoai</span><span class="tag">Ổn Ổn</span>
+    </div>
+    <div class="t-item card">
+      <div class="t-date">TUẦN 7–9 · 10/2026</div>
+      <h3>Mua sắm và lắp ráp</h3>
+      <p>Mua cấu kiện và viết chương trình điều khiển, đấu nối cảm biến, barie, màn hình LCD và đèn báo.</p>
+      <span class="tag">Lập Trình</span><span class="tag">Khổ Sở</span>
+    </div>
+    <div class="t-item card">
+      <div class="t-date">TUẦN 10–11 · 11/2026</div>
+      <h3>Thiết kế sa bàn và liên kết</h3>
+      <p>Chạy thử sản phẩm, đi dây và trang trí lại.</p>
+      <span class="tag">Test</span><span class="tag">Mất Ăn Mất Ngủ</span>
+    </div>
+    <div class="t-item card">
+      <div class="t-date">TUẦN 12-13 · 12/2026</div>
+      <h3>Hoàn thiện &amp; báo cáo</h3>
+      <p>Hoàn thiện mô hình, quay video, làm báo cáo và trình bày trước hội đồng.</p>
+      <span class="tag">Báo Cáo</span><span class="tag">Mong Đợi</span>
+    </div>
+  </div>
+</section>
+
+<!-- =================== HÌNH ẢNH / VIDEO =================== -->
+<section class="tab" id="media">
+  <div class="section-head">
+    <div class="eyebrow">Thư viện</div>
+    <h2 class="title">Sản Phẩm</h2>
+  </div>
+
+  <div class="subtabs" id="mediaTabs">
+    <button class="active" data-sub="real">Hình ảnh thực tế</button>
+    <button data-sub="sim">Hình ảnh mô phỏng</button>
+    <button data-sub="video">Video</button>
+  </div>
+
+  <div class="subpane active" id="sub-real">
+    <div class="gallery">
+      <figure class="fig"><div class="ph" data-label="images/real-1.jpg"><img src="images/real-1.jpg" alt=""></div><figcaption>...</figcaption></figure>
+      <figure class="fig"><div class="ph" data-label="images/real-2.jpg"><img src="images/real-2.jpg" alt=""></div><figcaption>...</figcaption></figure>
+      <figure class="fig"><div class="ph" data-label="images/real-3.jpg"><img src="images/real-3.jpg" alt=""></div><figcaption>...</figcaption></figure>
+      <figure class="fig"><div class="ph" data-label="images/real-4.jpg"><img src="images/real-4.jpg" alt=""></div><figcaption>...</figcaption></figure>
+      <figure class="fig"><div class="ph" data-label="images/real-5.jpg"><img src="images/real-5.jpg" alt=""></div><figcaption>...</figcaption></figure>
+      <figure class="fig"><div class="ph" data-label="images/real-6.jpg"><img src="image/Logo.png" alt=""></div><figcaption>Nhận diện thương hiệu của ae ĐC</figcaption></figure>
+    </div>
+  </div>
+
+  <div class="subpane" id="sub-sim">
+    <div class="gallery">
+      <figure class="fig"><div class="ph" data-label="image/HA-MP.png"><img src="image/HA-MP.png" alt=""></div><figcaption>Mô hình 3D tổng thể</figcaption></figure>
+      <figure class="fig"><div class="ph" data-label="image/HA-MP-MN.png"><img src="image/HA-MP-MN.png" alt=""></div><figcaption>Sơ đồ mạch (tượng trưng)</figcaption></figure>
+    </div>
+  </div>
+
+  <div class="subpane" id="sub-video">
+    <div class="video-box">
+      <video controls preload="metadata" poster="images/video-poster.jpg">
+        <source src="videos/demo.mp4" type="video/mp4">
+        Trình duyệt không hỗ trợ video.
+      </video>
+    </div>
+    <p class="video-note">Video demo hoạt động của mô hình (đặt file tại <code>videos/demo.mp4</code>).</p>
+  </div>
+</section>
+
+<!-- =================== CẤU KIỆN & THÔNG SỐ =================== -->
+<section class="tab" id="specs">
+  <div class="section-head">
+    <div class="eyebrow">Thông số kỹ thuật</div>
+    <h2 class="title">Cấu Kiện &amp; Thông Số Chi Tiết</h2>
+    <p class="lead">Danh sách linh kiện chính và các thông số của mô hình.</p>
+  </div>
+
+  <div class="spec-cards">
+    <div class="card"><small>Kích thước</small><b>... cm</b></div>
+    <div class="card"><small>Nguồn cấp</small><b>... DC</b></div>
+    <div class="card"><small>Số vị trí đỗ</small><b>4 ô</b></div>
+    <div class="card"><small>Vi điều khiển</small><b>ESP32 / Arduino</b></div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>#</th><th>Linh kiện</th><th>SL</th><th>Thông số</th><th>Chức năng</th></tr></thead>
+      <tbody>
+        <tr><td>01</td><td><b>...</b></td><td>1</td><td><span>...</span></td><td><span>...</span></td></tr>
+        <tr><td>02</td><td><b>...</b></td><td>1</td><td><span>...</span></td><td><span>...</span></td></tr>
+        <tr><td>03</td><td><b>...</b></td><td>1</td><td><span>...</span></td><td><span>...</span></td></tr>
+        <tr><td>04</td><td><b>...</b></td><td>1</td><td><span>...</span></td><td><span>...</span></td></tr>
+        <tr><td>05</td><td><b>...</b></td><td>1</td><td><span>...</span></td><td><span>...</span></td></tr>
+        <tr><td>06</td><td><b>...</b></td><td>1</td><td><span>...</span></td><td><span>...</span></td></tr>
+        <tr><td>07</td><td><b>...</b></td><td>1</td><td><span>...</span></td><td><span>...</span></td></tr>
+        <tr><td>08</td><td><b>...</b></td><td>1</td><td><span>...</span></td><td><span>...</span></td></tr> 
+      </tbody>
+    </table>
+  </div>
+
+  <h3 class="sub-title">Sơ đồ khối hệ thống</h3>
+  <div class="diagram">
+    <div>Cảm biến ô đỗ</div>
+    <div>→</div>
+    <div class="core">Vi điều khiển</div>
+    <div>→</div>
+    <div>LCD · LED · Servo</div>
+  </div>
+  <div class="ph wide static-img" data-label="Sơ đồ nguyên lý chi tiết&#10;images/schematic.png" style="margin-top:22px"><img src="image/HA-MP-MN.png" alt="Sơ đồ nguyên lý"></div>
+</section>
+
+<!-- =================== QUÁ TRÌNH LÀM VIỆC =================== -->
+<section class="tab" id="process">
+  <div class="section-head">
+    <div class="eyebrow">Behind the Scenes</div>
+    <h2 class="title">Quá Trình Làm Việc Của Nhóm</h2>
+    <p class="lead">Khổ vãi!!!</p>
+  </div>
+  <div class="process-grid">
+    <figure class="fig"><div class="ph" data-label="images/work-1.jpg"><img src="image/2.jpg" alt=""></div><figcaption>Không biết ghi cap!!</figcaption></figure>
+    <figure class="fig"><div class="ph" data-label="images/work-2.jpg"><img src="image/1.jpg" alt=""></div><figcaption>Miệt mài :0</figcaption></figure>
+    <figure class="fig"><div class="ph" data-label="images/work-3.jpg"><img src="images/work-3.jpg" alt=""></div><figcaption>...</figcaption></figure>
+    <figure class="fig"><div class="ph" data-label="images/work-4.jpg"><img src="images/work-4.jpg" alt=""></div><figcaption>...</figcaption></figure>
+    <figure class="fig"><div class="ph" data-label="images/work-5.jpg"><img src="images/work-5.jpg" alt=""></div><figcaption>...</figcaption></figure>
+    <figure class="fig"><div class="ph" data-label="images/work-6.jpg"><img src="images/work-6.jpg" alt=""></div><figcaption>...</figcaption></figure>
+    <figure class="fig"><div class="ph" data-label="images/work-7.jpg"><img src="images/work-7.jpg" alt=""></div><figcaption>...</figcaption></figure>
+    <figure class="fig"><div class="ph" data-label="images/work-8.jpg"><img src="images/work-8.jpg" alt=""></div><figcaption>...</figcaption></figure>
+    <figure class="fig"><div class="ph" data-label="images/work-9.jpg"><img src="images/work-9.jpg" alt=""></div><figcaption>...</figcaption></figure>
+  </div>
+</section>
+
+<!-- =================== THÀNH VIÊN =================== -->
+<section class="tab" id="team">
+  <div class="section-head">
+    <div class="eyebrow">Đ.C team</div>
+    <h2 class="title">Đơn Vị Thực Hiện &amp; Thành Viên</h2>
+  </div>
+
+  <div class="org">
+    <div class="card">
+      <div class="ph square" data-label="GVHD"><img src="image/GVHD.jpg" alt=""></div>
+      <div>
+        <div class="eyebrow" style="margin:0 0 4px">Giảng viên hướng dẫn</div>
+        <h3>TS. Lồ Sìu Vẫy</h3>
+        <p>Khoa Khoa Học Ứng Dụng, ĐH Bách Khoa – ĐHQG-HCM</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ph square" data-label="Logo"><img src="image/Team.png" alt=""></div>
+      <div>
+        <div class="eyebrow" style="margin:0 0 4px">Đơn vị thực hiện</div>
+        <h3>Nhóm Đ.C – Lớp L02</h3>
+        <p>FAS - Đại học Bách Khoa - ĐHQG-HCM · Học kỳ 261</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="team-grid">
+    <div class="card member">
+      <div class="ph square" data-label="Ảnh"><img src="images/member-1.jpg" alt=""></div>
+      <h3>...</h3><span class="role">Nhóm trưởng · Kĩ sư phần cứng</span>
+      <p>Chỉ huy - Phụ trách thiết kế và tích hợp phần cứng.</p><div class="id">MSSV: ...</div>
+    </div>
+    <div class="card member">
+      <div class="ph square" data-label="Ảnh"><img src="image/nttl.jpg" alt=""></div>
+      <h3>Nguyễn Triệu Thành Long</h3><span class="role">Kĩ sư phần mềm</span>
+      <p>Training AI - Lập trình adruino và ESP32.</p><div class="id">MSSV: 2613577</div>
+    </div>
+    <div class="card member">
+      <div class="ph square" data-label="Ảnh"><img src="images/member-3.jpg" alt=""></div>
+      <h3>...</h3><span class="role">Kĩ sư phần mềm</span>
+      <p>Training AI - Lập trình hệ thống nhận diện phương tiện và biển số.</p><div class="id">MSSV: ...</div>
+    </div>
+    <div class="card member">
+      <div class="ph square" data-label="Ảnh"><img src="images/member-4.jpg" alt=""></div>
+      <h3>...</h3><span class="role">Kí sư phần cứng</span>
+      <p>Lắp nối - Viết firmware điều khiển cảm biến, servo và màn hình.</p><div class="id">MSSV: ...</div>
+    </div>
+    <div class="card member">
+      <div class="ph square" data-label="Ảnh"><img src="image/nnm.png" alt=""></div>
+      <h3>Nguyễn Nhựt Minh</h3><span class="role">Kĩ sư phần mềm</span>
+      <p>Làm web - Thiết kế và gia công khung, ô đỗ và barie.</p><div class="id">MSSV: 2511859</div>
+    </div>
+  </div>
+</section>
+
+
+
+</main>
+
+<footer>
+  <p><b>A.U.R.A Vision Park</b> · Nhóm Đ.C, chúng tôi là CKT và KHDL – HCMUT</p>
+  <p>© 2026 · Cấm copy, đánh bản quyền nha!!</p>
+</footer>
+
+<div id="lightbox"><img alt=""></div>
+
+<script>
+/* ===== 1. HIỆU ỨNG SỐ NHỊ PHÂN RƠI NHƯ TUYẾT ===== */
+(function(){
+  const c=document.getElementById('rain'),ctx=c.getContext('2d');
+  let W,H,flakes=[];
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function resize(){
+    const dpr=window.devicePixelRatio||1;
+    W=innerWidth;H=innerHeight;
+    c.width=W*dpr;c.height=H*dpr;c.style.width=W+'px';c.style.height=H+'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    const n=Math.min(160,Math.floor(W*H/9000));
+    flakes=Array.from({length:n},()=>make(true));
+  }
+  function make(rand){
+    const depth=Math.random();
+    return{
+      x:Math.random()*W,
+      y:rand?Math.random()*H:-20,
+      v:.25+depth*.75,
+      s:10+depth*14,
+      a:.05+depth*.17,
+      ch:Math.random()<.5?'0':'1',
+      ph:Math.random()*6.28,
+      sw:.2+Math.random()*.5,
+      t:Math.random()*400
+    };
+  }
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    for(const f of flakes){
+      f.y+=f.v;f.ph+=.012;
+      f.x+=Math.sin(f.ph)*f.sw*.5;
+      if(--f.t<0){f.ch=f.ch==='0'?'1':'0';f.t=200+Math.random()*400}
+      if(f.y>H+20){Object.assign(f,make(false));f.x=Math.random()*W}
+      ctx.font=f.s+'px "JetBrains Mono",monospace';
+      ctx.fillStyle='rgba(74,163,255,'+f.a+')';
+      ctx.fillText(f.ch,f.x,f.y);
+    }
+    if(!reduce)requestAnimationFrame(draw);
+  }
+  addEventListener('resize',resize);
+  resize();draw();
+})();
+
+/* ===== 2. CHUYỂN TAB ===== */
+const tabs=[...document.querySelectorAll('.tab')];
+const navBtns=[...document.querySelectorAll('#nav button')];
+function show(id){
+  if(!document.getElementById(id))id='home';
+  tabs.forEach(t=>t.classList.toggle('active',t.id===id));
+  navBtns.forEach(b=>b.classList.toggle('active',b.dataset.tab===id));
+  history.replaceState(null,'','#'+id);
+  scrollTo({top:0,behavior:'smooth'});
+  const act=document.querySelector('#nav button.active');
+  if(act)act.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'});
+}
+navBtns.forEach(b=>b.addEventListener('click',()=>show(b.dataset.tab)));
+document.querySelectorAll('[data-go]').forEach(el=>el.addEventListener('click',()=>show(el.dataset.go)));
+show(location.hash.slice(1)||'home');
+
+/* ===== 3. TAB CON (MEDIA) ===== */
+document.querySelectorAll('#mediaTabs button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('#mediaTabs button').forEach(x=>x.classList.toggle('active',x===b));
+    document.querySelectorAll('.subpane').forEach(p=>p.classList.toggle('active',p.id==='sub-'+b.dataset.sub));
+  });
+});
+
+/* ===== 4. XỬ LÝ ẢNH & LIGHTBOX ===== */
+document.querySelectorAll('.ph img').forEach(img=>{
+  const box=img.parentElement;
+  const ok=()=>box.classList.add('loaded');
+  const bad=()=>box.classList.add('missing');
+  if(img.complete){img.naturalWidth?ok():bad()}
+  img.addEventListener('load',ok);
+  img.addEventListener('error',bad);
+  if(box.classList.contains('static-img'))return;
+  img.addEventListener('click',()=>{
+    if(!box.classList.contains('loaded'))return;
+    const lb=document.getElementById('lightbox');
+    lb.querySelector('img').src=img.src;lb.classList.add('on');
+  });
+});
+document.getElementById('lightbox').addEventListener('click',e=>e.currentTarget.classList.remove('on'));
+addEventListener('keydown',e=>{if(e.key==='Escape')document.getElementById('lightbox').classList.remove('on')});
+</script>
+</body>
+</html>
